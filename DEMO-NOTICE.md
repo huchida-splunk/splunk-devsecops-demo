@@ -9,4 +9,3 @@
 
 Jenkins パイプライン(`Jenkinsfile`)が各段の結果を Splunk に送信し、Splunk 側で「スキャナ単体では見えない偽装座標」と「既知脆弱性」を横断検知する様子をデモします。
 
-<!-- poll-trigger test 182808 -->
