@@ -8,3 +8,5 @@
 - `org.apache.logging.log4j:log4j-core:2.14.1`(Log4Shell / CVE-2021-44228 を含む既知の脆弱バージョン)。
 
 Jenkins パイプライン(`Jenkinsfile`)が各段の結果を Splunk に送信し、Splunk 側で「スキャナ単体では見えない偽装座標」と「既知脆弱性」を横断検知する様子をデモします。
+
+<!-- poll-trigger test 182808 -->
