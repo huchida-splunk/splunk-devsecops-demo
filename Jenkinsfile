@@ -32,7 +32,7 @@ pipeline {
       }
     }
 
-    stage('Build (package)') { steps { sh 'mvn -q -DskipTests package; exit 0' } }
+    stage('Build (package)') { steps { sh 'rm -f trivy.json trivy-events.jsonl deps.txt events.jsonl; mvn -q -DskipTests package' } }
 
     stage('SCA (Trivy)') {
       steps {
