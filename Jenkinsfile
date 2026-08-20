@@ -39,7 +39,7 @@ pipeline {
         sh '''
           set +e
           COL="${HECBASE%/raw}"; COL="${COL%/event}"
-          trivy fs --quiet --format json --scanners vuln --severity HIGH,CRITICAL target/ > trivy.json 2>/dev/null
+          trivy fs --quiet --format json --scanners vuln --severity HIGH,CRITICAL --skip-dirs target . > trivy.json 2>/dev/null
           jq -c --arg app "$APP" --arg build "$BUILD_NUMBER" --arg commit "${GIT_COMMIT:-unknown}" \
             '.Results[]?.Vulnerabilities[]? | {index:"devsecops",sourcetype:"trivy:finding",event:{app:$app,build:$build,commit:$commit,pkg:.PkgName,installed:.InstalledVersion,cve:.VulnerabilityID,severity:.Severity,title:.Title}}' \
             trivy.json > trivy-events.jsonl
@@ -54,13 +54,17 @@ pipeline {
   }
   post {
     always {
-      sh '''
-        COL="${HECBASE%/raw}"; COL="${COL%/event}"
-        printf '{"index":"devsecops","sourcetype":"jenkins:build","event":{"app":"%s","build":"%s","commit":"%s","actor":"ai-agent","result":"done"}}\\n' \
-          "$APP" "$BUILD_NUMBER" "${GIT_COMMIT:-unknown}" | \
-          curl -sk "$COL" -H "Authorization: Splunk $TOKEN" --data-binary @- -w "\\njenkins:build HEC %{http_code}\\n"
-        exit 0
-      '''
+      script {
+        def r = currentBuild.currentResult
+        def d = currentBuild.duration ?: 0
+        sh """
+          COL="\${HECBASE%/raw}"; COL="\${COL%/event}"
+          printf '{"index":"devsecops","sourcetype":"jenkins:build","event":{"app":"%s","build":"%s","commit":"%s","result":"%s","duration_ms":%s}}\\n' \
+            "\$APP" "\$BUILD_NUMBER" "\${GIT_COMMIT:-unknown}" "${r}" "${d}" | \
+            curl -sk "\$COL" -H "Authorization: Splunk \$TOKEN" --data-binary @- -w "\\njenkins:build HEC %{http_code}\\n"
+          exit 0
+        """
+      }
     }
   }
 }
